@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+					"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.test.mapper.itf.ServiceMapper">
+
+ <select id="querylist" parameterType="ServiceVO" resultType="ServiceVO">
+    SELECT * FROM service
+    <where>
+        <if test="service_id!=null">AND service_id LIKE '%${service_id}%'</if>
+        <if test="service_name!=null">AND service_name LIKE '%${service_name}%'</if>
+    </where>
+ </select>
+
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+	<context:component-scan base-package="com.test.service.impl"></context:component-scan>
+
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" destroy-method="close">
+		<!-- 数据库基本信息配置 -->
+		<property name="url" value="jdbc:mysql://127.0.0.1:3306/myhospital?useUnicode=true&amp;characterEncoding=utf-8" />
+		<property name="username" value="root" />
+		<property name="password" value="root" />
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+	</bean>
+
+<!-- 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="typeAliasesPackage" value="com.test.entity"></property>
+		<property name="mapperLocations" value="classpath:com/test/mapper/xml/*.xml"></property>
+	</bean>
+
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory"></constructor-arg>
+	</bean> -->
+
+	<!-- Spring整合Mybatis，更多查看文档：http://mp.baomidou.com -->
+	<bean id="sqlSessionFactory" class="com.baomidou.mybatisplus.spring.MybatisSqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations" value="classpath:com/test/mapper/xml/*.xml" /><!-- 自动扫描Mapping.xml文件 -->
+		<!-- <property name="configLocation" value="classpath:mybatis/mybatis-config.xml" /> -->
+		<property name="typeAliasesPackage" value="com.test.entity" />
+<!-- 		<property name="plugins">
+			<array>
+				分页插件配置
+				<bean id="paginationInterceptor" class="com.baomidou.mybatisplus.plugins.PaginationInterceptor">
+				</bean>
+			</array>
+		</property> -->
+		<!-- 全局配置注入 -->
+		<property name="globalConfig" ref="globalConfig" />
+	</bean>
+	<bean id="globalConfig" class="com.baomidou.mybatisplus.entity.GlobalConfiguration">
+		<!--AUTO->`0`("数据库ID自增")；INPUT->`1`(用户输入ID")；ID_WORKER->`2`("全局唯一ID")；UUID->`3`("全局唯一ID") -->
+		<property name="idType" value="0" />
+		<!-- MYSQL->`mysql` ORACLE->`oracle` DB2->`db2` H2->`h2` HSQL->`hsql` SQLITE->`sqlite` POSTGRE->`postgresql` SQLSERVER2005->`sqlserver2005` SQLSERVER->`sqlserver` -->
+		<!-- Oracle需要添加该项 -->
+		<!-- <property name="dbType" value="oracle" /> -->
+		<!-- 全局表为下划线命名设置 true -->
+		<!-- <property name="dbColumnUnderline" value="true" /> -->
+		<!-- <property name="metaObjectHandler">
+			<bean class="com.baomidou.springmvc.common.MyMetaObjectHandler" />
+		</property> -->
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.test.mapper.itf"></property>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+	</bean>
+
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="test*" rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+
+	<aop:config>
+		<aop:pointcut expression="execution(* com.test.jdbc.*.*(..))" id="servicePointcut" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="servicePointcut" />
+	</aop:config>
+
+
+
+</beans>
